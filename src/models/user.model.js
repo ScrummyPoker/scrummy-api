@@ -40,6 +40,9 @@ const userSchema = mongoose.Schema(
       enum: roles,
       default: 'user',
     },
+    lastToken: {
+      type: String,
+    }
   },
   {
     timestamps: true,
