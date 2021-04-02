@@ -5,75 +5,80 @@ const logger = require('./config/logger');
 const socketio = require('socket.io');
 const formatMessage = require('./utils/messages.js');
 const {
-  userJoin,
-  getCurrentUser,
-  userLeave,
-  getRoomUsers
-} = require('./utils/users');
+  playerJoin,
+  getCurrentPlayer,
+  playerLeave,
+  getLobbyPlayers
+} = require('./utils/players');
 
-let server;
-mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
-  logger.info('Connected to MongoDB');
-  server = app.listen(config.port, () => {
-    logger.info(`Listening to port ${config.port}`);
-  });
+const server = app.listen(config.port, () => {
+  logger.info(`Listening to port ${config.port}`);
 });
 
-const io = socketio(server);
-const botName = 'ChatCord Bot';
+mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
+  logger.info('Connected to MongoDB');
+});
+
+const io = socketio(4444);
+const botName = "Scrummy Bot";
 
 // Run when client connects
 io.on('connection', socket => {
-  socket.on('joinRoom', ({ username, room }) => {
-    const user = userJoin(socket.id, username, room);
+  socket.on('joinLobby', ({ playerId, lobbyCode }) => {
+    const player = playerJoin(socket.id, playerId, lobbyCode);
 
-    socket.join(user.room);
+    socket.join(player.lobbyCode);
 
-    // Welcome current user
-    socket.emit('message', formatMessage(botName, 'Welcome to ChatCord!'));
+    // Welcome current player
+    socket.emit('lobbyMessage', formatMessage(botName, 'Welcome to ChatCord!'));
 
-    // Broadcast when a user connects
+    // Broadcast when a player connects
     socket.broadcast
-      .to(user.room)
+      .to(player.lobbyCode)
       .emit(
-        'message',
-        formatMessage(botName, `${user.username} has joined the chat`)
+        'lobbyMessage',
+        formatMessage(botName, `${player.playername} has joined the chat`)
       );
 
-    // Send users and room info
-    io.to(user.room).emit('roomUsers', {
-      room: user.room,
-      users: getRoomUsers(user.room)
+    // Send players and lobby info
+    io.to(player.lobbyCode).emit('lobbyInfo', {
+      lobbyCode: player.lobbyCode,
+      players: getLobbyPlayers(player.lobbyCode)
     });
   });
 
   // Listen for chatMessage
   socket.on('chatMessage', msg => {
-    const user = getCurrentUser(socket.id);
+    const player = getCurrentPlayer(socket.id);
 
-    io.to(user.room).emit('message', formatMessage(user.username, msg));
+    io.to(player.lobbyCode).emit('chatMessage', formatMessage(player.id, msg));
+  });
+
+  // Listen for cardChosen message
+  socket.on('cardMessage', messageData => {
+    const player = getCurrentPlayer(socket.id);
+
+    io.to(player.lobbyCode).emit('cardMessage', formatMessage(player.id, messageData));
   });
 
   // Runs when client disconnects
   socket.on('disconnect', () => {
-    const user = userLeave(socket.id);
+    const player = playerLeave(socket.id);
 
-    if (user) {
-      io.to(user.room).emit(
-        'message',
-        formatMessage(botName, `${user.username} has left the chat`)
+    if (player) {
+      io.to(player.lobbyCode).emit(
+        'lobbyMessage',
+        formatMessage(botName, `${player.lobbyPlayers} has left the chat`)
       );
 
-      // Send users and room info
-      io.to(user.room).emit('roomUsers', {
-        room: user.room,
-        users: getRoomUsers(user.room)
+      // Send players and room info
+      io.to(player.lobbyCode).emit('lobbyInfo', {
+        room: player.lobbyCode,
+        players: getLobbyPlayers(player.lobbyCode)
       });
     }
   });
 });
-
-
 
 
 const exitHandler = () => {
