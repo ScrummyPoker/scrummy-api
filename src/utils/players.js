@@ -1,8 +1,8 @@
 const players = [];
 
 // Join player to chat
-function playerJoin(id, playerId, lobbyCode) {
-  players.push({ id, playerId, lobbyCode });
+function playerJoin(id, playerId, playerName, lobbyCode) {
+  players.push({ id, playerId, playerName, lobbyCode });
   return players;
 }
 

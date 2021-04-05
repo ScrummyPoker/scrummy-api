@@ -24,8 +24,8 @@ const botName = "Scrummy Bot";
 
 // Run when client connects
 io.on('connection', socket => {
-  socket.on('joinLobby', ({ playerId, lobbyCode }) => {
-    const player = playerJoin(socket.id, playerId, lobbyCode);
+  socket.on('joinLobby', ({ playerId, playerName, lobbyCode }) => {
+    const player = playerJoin(socket.id, playerId, playerName, lobbyCode);
 
     socket.join(player.lobbyCode);
 
@@ -40,7 +40,7 @@ io.on('connection', socket => {
         formatMessage(botName, `${player.playername} has joined the chat`)
       );
 
-    // Send players and lobby info
+    // Send to everyone players and lobby info
     io.to(player.lobbyCode).emit('lobbyInfo', {
       lobbyCode: player.lobbyCode,
       players: getLobbyPlayers(player.lobbyCode)
@@ -55,10 +55,26 @@ io.on('connection', socket => {
   });
 
   // Listen for cardChosen message
-  socket.on('cardMessage', messageData => {
+  socket.on('cardMessage', cardData => {
     const player = getCurrentPlayer(socket.id);
 
-    io.to(player.lobbyCode).emit('cardMessage', formatMessage(player.id, messageData));
+    io.to(player.lobbyCode).emit('cardMessage', {
+      cardChosen: cardData.cardChosen,
+      lobbyCode: cardData.lobbyCode,
+      player
+    });
+  });
+
+  
+  // Listen for admin messages
+  socket.on('adminAction', cardData => {
+    const player = getCurrentPlayer(socket.id);
+  
+    // Send players and lobby info
+    io.to(player.lobbyCode).emit('lobbyInfo', {
+      lobbyCode: player.lobbyCode,
+      status: 'STARTED'
+    });
   });
 
   // Runs when client disconnects
