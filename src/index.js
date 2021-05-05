@@ -4,12 +4,7 @@ const config = require('./config/config');
 const logger = require('./config/logger');
 const socketio = require('socket.io');
 const formatMessage = require('./utils/messages.js');
-const {
-  playerJoin,
-  getCurrentPlayer,
-  playerLeave,
-  getLobbyPlayers
-} = require('./utils/players');
+const { playerJoin, getCurrentPlayer, playerLeave, getLobbyPlayers } = require('./utils/players');
 
 const server = app.listen(config.port, () => {
   logger.info(`Listening to port ${config.port}`);
@@ -20,60 +15,58 @@ mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
 });
 
 const io = socketio(4444);
-const botName = "Scrummy Bot";
+const botName = 'Scrummy Bot';
 
 // Run when client connects
-io.on('connection', socket => {
+io.on('connection', (socket) => {
   socket.on('joinLobby', ({ playerId, playerName, lobbyCode }) => {
     const player = playerJoin(socket.id, playerId, playerName, lobbyCode);
 
-    socket.join(player.lobbyCode);
+    socket.join(lobbyCode);
 
     // Welcome current player
     socket.emit('lobbyMessage', formatMessage(botName, 'Welcome to ChatCord!'));
 
     // Broadcast when a player connects
-    socket.broadcast
-      .to(player.lobbyCode)
-      .emit(
-        'lobbyMessage',
-        formatMessage(botName, `${player.playername} has joined the chat`)
-      );
+    // socket.broadcast.to(lobbyCode).emit('newPlayer', getLobbyPlayers(lobbyCode));
 
-    // Send to everyone players and lobby info
-    io.to(player.lobbyCode).emit('lobbyInfo', {
-      lobbyCode: player.lobbyCode,
-      players: getLobbyPlayers(player.lobbyCode)
+    // Send to everyone
+    io.to(lobbyCode).emit('lobbyInfo', {
+      lobbyCode,
+      players: getLobbyPlayers(lobbyCode),
+    });
+
+    io.to(lobbyCode).emit('newPlayer', {
+      players: getLobbyPlayers(lobbyCode),
     });
   });
 
   // Listen for chatMessage
-  socket.on('chatMessage', msg => {
+  socket.on('chatMessage', (msg) => {
     const player = getCurrentPlayer(socket.id);
 
     io.to(player.lobbyCode).emit('chatMessage', formatMessage(player.id, msg));
   });
 
   // Listen for cardChosen message
-  socket.on('cardMessage', cardData => {
+  socket.on('cardMessage', (cardData) => {
     const player = getCurrentPlayer(socket.id);
 
     io.to(player.lobbyCode).emit('cardMessage', {
       cardChosen: cardData.cardChosen,
       lobbyCode: cardData.lobbyCode,
-      player
+      player,
     });
   });
 
-  
   // Listen for admin messages
-  socket.on('adminAction', cardData => {
+  socket.on('adminAction', (cardData) => {
     const player = getCurrentPlayer(socket.id);
-  
+
     // Send players and lobby info
-    io.to(player.lobbyCode).emit('lobbyInfo', {
+    io.to(player.lobbyCode).emit('adminAction', {
       lobbyCode: player.lobbyCode,
-      status: 'STARTED'
+      status: 'STARTED',
     });
   });
 
@@ -82,20 +75,16 @@ io.on('connection', socket => {
     const player = playerLeave(socket.id);
 
     if (player) {
-      io.to(player.lobbyCode).emit(
-        'lobbyMessage',
-        formatMessage(botName, `${player.lobbyPlayers} has left the chat`)
-      );
+      io.to(player.lobbyCode).emit('lobbyMessage', formatMessage(botName, `${player.lobbyPlayers} has left the chat`));
 
       // Send players and room info
       io.to(player.lobbyCode).emit('lobbyInfo', {
         room: player.lobbyCode,
-        players: getLobbyPlayers(player.lobbyCode)
+        players: getLobbyPlayers(player.lobbyCode),
       });
     }
   });
 });
-
 
 const exitHandler = () => {
   if (server) {

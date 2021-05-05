@@ -17,9 +17,9 @@ const createLobby = async (lobbyBody) => {
   }
 
   const lobbyCreated = await Lobby.create({
-    code: lobbyBody.code,
+    code: lobbyBody.lobbyCode,
     players: [user.id],
-    admins: [user.id]
+    admins: [user.id],
   });
 
   return lobbyCreated;
@@ -33,7 +33,7 @@ const createLobby = async (lobbyBody) => {
 const getLobbyByCode = async (lobbyCode) => {
   return await Lobby.findOne({ code: lobbyCode, active: true });
 
-  return lobby ? lobby.populate("players") : lobby;
+  return lobby ? lobby.populate('players') : lobby;
 };
 
 /**
@@ -41,7 +41,7 @@ const getLobbyByCode = async (lobbyCode) => {
  * @param  {String} lobbyId
  * @returns {Promise<Lobby>}
  */
- const getLobbyByID = async (lobbyId) => {
+const getLobbyByID = async (lobbyId) => {
   return Lobby.findOne({ id: lobbyId });
 };
 
@@ -60,65 +60,68 @@ const getActiveLobbies = async (lobbyCode) => {
  * @returns {Promise<Lobby>}
  */
 const enterLobby = async (lobby, userId) => {
-  if(lobby.players.find(t => t.toString() === userId)) {
+  if (lobby.players.find((t) => t.toString() === userId)) {
     //user already joined
     return lobby;
   }
 
-  lobby.players = lobby.players.concat([{
-    _id: userId,
-    isAdmin: false
-  }]);
+  lobby.players = lobby.players.concat([
+    {
+      _id: userId,
+      isAdmin: false,
+    },
+  ]);
 
   await lobby.save();
   return lobby;
 };
 
 const leaveLobby = async (lobby, userId) => {
-  lobby.players = lobby.players.filter(t => t.toString() !== userId);
+  lobby.players = lobby.players.filter((t) => t.toString() !== userId);
 
   await lobby.save();
   return lobby;
 };
 
 const deleteLobby = async (lobby, refreshToken) => {
-  if(isValidAdminInLobby(lobby, refreshToken)) {
+  if (isValidAdminInLobby(lobby, refreshToken)) {
     lobby.active = false;
+    return await lobby.save();
+  }
+
+  return null;
+};
+
+const addAdminToLobby = async (lobby, adminId, refreshToken) => {
+  if (isValidAdminInLobby(lobby, refreshToken)) {
+    lobby.admins = lobby.admins.filter((t) => t.toString() !== adminId).concat([adminId]);
     await lobby.save();
   }
 };
 
-const addAdminToLobby = async (lobby, adminId, refreshToken) => {
-  if(isValidAdminInLobby(lobby, refreshToken)) {
-    lobby.admins = lobby.admins.filter(t => t.toString() !== adminId).concat([adminId]);
-    await lobby.save();
-  }
-}
-
 const removeAdminFromLobby = async (lobby, adminId, refreshToken) => {
-  if(isValidAdminInLobby(lobby, refreshToken)) {
-    lobby.admins = lobby.admins.filter(t => t.toString() !== adminId);
+  if (isValidAdminInLobby(lobby, refreshToken)) {
+    lobby.admins = lobby.admins.filter((t) => t.toString() !== adminId);
     await lobby.save();
   }
-}
+};
 
 const isValidAdminInLobby = async (lobby, refreshToken) => {
   try {
     const userId = await tokenService.getUserIdByToken(refreshToken);
     const user = await userService.getUserById(userId);
-    
-    const isAdmin = lobby.toObject().admins.find(t => t.toString() == user.id);
+
+    const isAdmin = lobby.toObject().admins.find((t) => t.toString() == user.id);
 
     if (!user || !isAdmin) {
       throw new Error();
     }
 
     return true;
-   
   } catch (error) {
     throw new ApiError(httpStatus.UNAUTHORIZED, 'Please authenticate');
   }
-}
+};
 
 module.exports = {
   createLobby,
@@ -129,5 +132,5 @@ module.exports = {
   leaveLobby,
   deleteLobby,
   addAdminToLobby,
-  removeAdminFromLobby
+  removeAdminFromLobby,
 };

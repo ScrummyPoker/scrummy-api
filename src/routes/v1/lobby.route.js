@@ -6,22 +6,26 @@ const auth = require('../../middlewares/auth');
 
 const router = express.Router();
 
-router.post('/', validate(lobbyValidation.createLobby), lobbyController.createLobby);
+router.route('/').post(auth(), validate(lobbyValidation.createLobby), lobbyController.createLobby);
 
-router.get('/:lobbyCode', validate(lobbyValidation.getLobbyInfo), lobbyController.getLobbyInfo);
+router.route('/:lobbyCode').get(auth(), validate(lobbyValidation.getLobbyInfo), lobbyController.getLobbyInfo);
 
-router.delete('/:lobbyCode', validate(lobbyValidation.deleteLobby), lobbyController.deleteLobby);
+router.route('/:lobbyCode').delete(auth(), validate(lobbyValidation.deleteLobby), lobbyController.deleteLobby);
 
-router.post('/:lobbyCode/enter', validate(lobbyValidation.enterLobby), lobbyController.enterLobby);
+router.route('/:lobbyCode/enter').post(auth(), validate(lobbyValidation.enterLobby), lobbyController.enterLobby);
 
-router.post('/:lobbyCode/leave', validate(lobbyValidation.leaveLobby), lobbyController.leaveLobby);
+router.route('/:lobbyCode/leave').post(auth(), validate(lobbyValidation.leaveLobby), lobbyController.leaveLobby);
 
-router.put('/:lobbyCode/addAdmin', validate(lobbyValidation.addAdminToLobby), lobbyController.addAdminToLobby);
+router
+  .route('/:lobbyCode/addAdmin')
+  .post(auth(), validate(lobbyValidation.addAdminToLobby), lobbyController.addAdminToLobby);
 
-router.put('/:lobbyCode/removeAdmin', validate(lobbyValidation.removeAdminFromLobby), lobbyController.removeAdminFromLobby);
+router
+  .route('/:lobbyCode/removeAdmin')
+  .post(auth(), validate(lobbyValidation.removeAdminFromLobby), lobbyController.removeAdminFromLobby);
 
 //testing remove later
-router.get('/', validate(lobbyValidation.getAllLobies), lobbyController.getActiveLobbies);
+router.route('/').get(validate(lobbyValidation.getAllLobies), lobbyController.getActiveLobbies);
 
 module.exports = router;
 
@@ -142,7 +146,7 @@ module.exports = router;
 /**
  * @swagger
  * /lobby/{lobbyCode}/enter:
- *   put:
+ *   post:
  *     summary: Enter a lobby
  *     description: Everyone can enter a lobby
  *     tags: [Lobby]
@@ -178,7 +182,7 @@ module.exports = router;
 /**
  * @swagger
  * /lobby/{lobbyCode}/leave:
- *   put:
+ *   post:
  *     summary: Leave a lobby
  *     description: Every player who is inside the lobby can leave the lobby
  *     tags: [Lobby]
@@ -214,7 +218,7 @@ module.exports = router;
 /**
  * @swagger
  * /lobby/{lobbyCode}/addAdmin:
- *   put:
+ *   post:
  *     summary: Add admin to lobby
  *     description: Only admin of the lobby can add new admins
  *     tags: [Lobby]
@@ -226,7 +230,7 @@ module.exports = router;
  *         application/json:
  *           schema:
  *             type: object
-*              required:
+ *              required:
  *               - refreshToken
  *               - adminId
  *             example:
@@ -250,7 +254,7 @@ module.exports = router;
 /**
  * @swagger
  * /lobby/{lobbyCode}/removeAdmin:
- *   put:
+ *   post:
  *     summary: Remove admin from lobby
  *     description: Only admin of the lobby can remove new admins and cannot remove last one
  *     tags: [Lobby]

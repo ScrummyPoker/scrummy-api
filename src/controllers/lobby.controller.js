@@ -3,15 +3,14 @@ const catchAsync = require('../utils/catchAsync');
 const { lobbyService } = require('../services');
 const ApiError = require('../utils/ApiError');
 
-
 const createLobby = catchAsync(async (req, res) => {
   const lobby = await lobbyService.getLobbyByCode(req.body.code);
 
   if (lobby) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Lobby with same code already exists');
-  } 
+  }
 
-  const lobbyCreated = lobbyService.createLobby(req.body);
+  const lobbyCreated = await lobbyService.createLobby(req.body);
   res.status(httpStatus.CREATED).send(lobbyCreated);
 });
 
@@ -37,7 +36,7 @@ const enterLobby = catchAsync(async (req, res) => {
   if (!lobby) {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lobby not found');
   }
-  
+
   const newLobby = await lobbyService.enterLobby(lobby, req.body.userId);
   res.send(newLobby);
 });
@@ -49,7 +48,7 @@ const leaveLobby = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lobby not found');
   }
 
-  if(!lobby.players.find(t => t._id === userId)) {
+  if (!lobby.players.find((t) => t._id === userId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Player is not registered in this lobby');
   }
 
@@ -64,10 +63,13 @@ const deleteLobby = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lobby not found');
   }
 
-  const newLobby = await lobbyService.deleteLobby(lobby, req.body.refreshToken);
-  res.status(httpStatus.NO_CONTENT).send();
+  try {
+    await lobbyService.deleteLobby(lobby, req.body.refreshToken);
+    res.status(httpStatus.NO_CONTENT).send();
+  } catch (e) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Could not delete lobby: ' + e);
+  }
 });
-
 
 const addAdminToLobby = catchAsync(async (req, res) => {
   const lobby = await lobbyService.getLobbyByCode(req.params.lobbyCode);
@@ -80,7 +82,6 @@ const addAdminToLobby = catchAsync(async (req, res) => {
   res.send(newLobby);
 });
 
-
 const removeAdminFromLobby = catchAsync(async (req, res) => {
   const lobby = await lobbyService.getLobbyByCode(req.params.lobbyCode);
 
@@ -88,14 +89,14 @@ const removeAdminFromLobby = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lobby not found');
   }
 
-  if(lobby.admins.length === 0) {
+  if (lobby.admins.length === 0) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot remove the last admin of the lobby');
   }
 
   const newLobby = await lobbyService.addAdminToLobby(lobby, req.body.adminId, req.body.refreshToken);
   res.send(newLobby);
 });
-removeAdminFromLobby
+removeAdminFromLobby;
 
 module.exports = {
   createLobby,
