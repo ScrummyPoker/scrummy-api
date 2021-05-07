@@ -1,9 +1,15 @@
 const players = [];
 
 // Join player to chat
-function playerJoin(id, playerId, playerName, lobbyCode) {
-  players.push({ id, playerId, playerName, lobbyCode });
-  return getCurrentPlayer(id);
+function playerJoin(socketId, id, playerName, lobbyCode) {
+  let player = getCurrentPlayer(id);
+
+  if (!player) {
+    player = { socketId, id, playerName, lobbyCode };
+    players.push(player);
+  }
+
+  return player;
 }
 
 // Get current player
@@ -12,8 +18,8 @@ function getCurrentPlayer(id) {
 }
 
 // Player leaves chat
-function playerLeave(id) {
-  const index = players.findIndex((player) => player.id === id);
+function playerLeave(socketId) {
+  const index = players.findIndex((player) => player.socketId === socketId);
 
   if (index !== -1) {
     return players.splice(index, 1)[0];
