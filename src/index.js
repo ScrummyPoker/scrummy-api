@@ -14,7 +14,7 @@ mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   logger.info('Connected to MongoDB');
 });
 
-const io = socketio(4444);
+const io = socketio(config.socketPort);
 const botName = 'Scrummy Bot';
 
 // Run when client connects

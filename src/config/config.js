@@ -28,6 +28,7 @@ if (error) {
 
 module.exports = {
   env: envVars.NODE_ENV,
+  socketPort: envVars.SOCKET_PORT,
   port: envVars.PORT,
   mongoose: {
     url: envVars.MONGODB_URL + (envVars.NODE_ENV === 'test' ? '-test' : ''),
@@ -50,6 +51,9 @@ module.exports = {
       auth: {
         user: envVars.SMTP_USERNAME,
         pass: envVars.SMTP_PASSWORD,
+      },
+      tls: {
+        rejectUnauthorized: false,
       },
     },
     from: envVars.EMAIL_FROM,
