@@ -16,7 +16,9 @@ const io = socketio(config.socketPort, {
 
 // Run when client connects
 io.on('connection', (socket) => {
+  logger.info('Connected to Socket');
   socket.on('joinLobby', ({ playerId, playerName, lobbyCode }) => {
+    logger.info('Joined Lobby');
     playerJoin(socket.id, playerId, playerName, lobbyCode);
 
     socket.join(lobbyCode);
@@ -66,6 +68,7 @@ io.on('connection', (socket) => {
 
   // Runs when client disconnects
   socket.on('disconnect', () => {
+    logger.info('Disconnected from Lobby');
     const player = playerLeave(socket.id);
 
     if (player) {
