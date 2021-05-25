@@ -1,26 +1,23 @@
 const mongoose = require('mongoose');
+const socketio = require('socket.io');
 const app = require('./app');
 const config = require('./config/config');
 const logger = require('./config/logger');
-const socketio = require('socket.io');
-const formatMessage = require('./utils/messages.js');
+const formatMessage = require('./utils/messages');
 const { playerJoin, getCurrentPlayer, playerLeave, getLobbyPlayers } = require('./utils/players');
-
-const server = app.listen(config.port, () => {
-  logger.info(`Listening to port ${config.port}`);
-});
 
 mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   logger.info('Connected to MongoDB');
 });
 
-const io = socketio(config.socketPort);
-const botName = 'Scrummy Bot';
+const io = socketio(config.socketPort, {
+  serveClient: false,
+});
 
 // Run when client connects
 io.on('connection', (socket) => {
   socket.on('joinLobby', ({ playerId, playerName, lobbyCode }) => {
-    const player = playerJoin(socket.id, playerId, playerName, lobbyCode);
+    playerJoin(socket.id, playerId, playerName, lobbyCode);
 
     socket.join(lobbyCode);
 
@@ -72,8 +69,6 @@ io.on('connection', (socket) => {
     const player = playerLeave(socket.id);
 
     if (player) {
-      io.to(player.lobbyCode).emit('lobbyMessage', formatMessage(botName, `${player.lobbyPlayers} has left the chat`));
-
       // Send players and room info
       io.to(player.lobbyCode).emit('lobbyInfo', {
         room: player.lobbyCode,
@@ -83,28 +78,12 @@ io.on('connection', (socket) => {
   });
 });
 
-const exitHandler = () => {
-  if (server) {
-    server.close(() => {
-      logger.info('Server closed');
-      process.exit(1);
-    });
-  } else {
-    process.exit(1);
-  }
-};
+const server = app.listen(config.port, () => {
+  logger.info(`Listening to port ${config.port}`);
+});
 
-const unexpectedErrorHandler = (error) => {
-  logger.error(error);
-  exitHandler();
-};
-
-process.on('uncaughtException', unexpectedErrorHandler);
-process.on('unhandledRejection', unexpectedErrorHandler);
-
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received');
-  if (server) {
-    server.close();
-  }
+io.attach(server, {
+  pingInterval: 10000,
+  pingTimeout: 5000,
+  cookie: false,
 });
