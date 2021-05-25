@@ -10,9 +10,11 @@ mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   logger.info('Connected to MongoDB');
 });
 
-const io = socketio(config.socketPort, {
-  serveClient: false,
-});
+const io = socketio(app);
+
+// const io = socketio(config.socketPort, {
+//   serveClient: false,
+// });
 
 // Run when client connects
 io.on('connection', (socket) => {
@@ -81,12 +83,6 @@ io.on('connection', (socket) => {
   });
 });
 
-const server = app.listen(config.port, () => {
+app.listen(config.port, () => {
   logger.info(`Listening to port ${config.port}`);
-});
-
-io.attach(server, {
-  pingInterval: 10000,
-  pingTimeout: 5000,
-  cookie: false,
 });
