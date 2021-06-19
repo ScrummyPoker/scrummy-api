@@ -37,7 +37,8 @@ const enterLobby = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lobby not found');
   }
 
-  const newLobby = await lobbyService.enterLobby(lobby, req.body.userId);
+  await lobbyService.enterLobby(lobby, req.body.userId);
+  const newLobby = await lobbyService.getLobbyByCode(req.params.lobbyCode);
   res.send(newLobby);
 });
 
@@ -48,7 +49,7 @@ const leaveLobby = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.NOT_FOUND, 'Lobby not found');
   }
 
-  if (!lobby.players.find((t) => t._id === userId)) {
+  if (!lobby.players.find((t) => t._id === req.body.userId)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Player is not registered in this lobby');
   }
 
@@ -67,7 +68,7 @@ const deleteLobby = catchAsync(async (req, res) => {
     await lobbyService.deleteLobby(lobby, req.body.refreshToken);
     res.status(httpStatus.NO_CONTENT).send();
   } catch (e) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Could not delete lobby: ' + e);
+    throw new ApiError(httpStatus.BAD_REQUEST, `Could not delete lobby: ${e}`);
   }
 });
 
@@ -96,7 +97,6 @@ const removeAdminFromLobby = catchAsync(async (req, res) => {
   const newLobby = await lobbyService.addAdminToLobby(lobby, req.body.adminId, req.body.refreshToken);
   res.send(newLobby);
 });
-removeAdminFromLobby;
 
 module.exports = {
   createLobby,

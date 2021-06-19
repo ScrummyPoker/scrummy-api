@@ -1,20 +1,19 @@
 const players = [];
 
+// Get current player
+function getCurrentPlayer(id) {
+  return players.find((player) => player.id === id);
+}
+
 // Join player to chat
 function playerJoin(socketId, id, playerName, lobbyCode) {
   let player = getCurrentPlayer(id);
-
-  if (!player) {
+  if (!player && id && playerName) {
     player = { socketId, id, playerName, lobbyCode };
     players.push(player);
   }
 
   return player;
-}
-
-// Get current player
-function getCurrentPlayer(id) {
-  return players.find((player) => player.id === id);
 }
 
 // Player leaves chat

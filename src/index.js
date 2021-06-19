@@ -26,7 +26,7 @@ io.on('connection', (socket) => {
     socket.join(lobbyCode);
 
     // Broadcast when a player connects
-    // socket.broadcast.to(lobbyCode).emit('newPlayer', getLobbyPlayers(lobbyCode));
+    // socket.broadcast.to(lobbyCode).emit('playerUpdate', getLobbyPlayers(lobbyCode));
 
     // Send to everyone
     io.to(lobbyCode).emit('lobbyInfo', {
@@ -34,7 +34,7 @@ io.on('connection', (socket) => {
       players: getLobbyPlayers(lobbyCode),
     });
 
-    io.to(lobbyCode).emit('newPlayer', {
+    io.to(lobbyCode).emit('playerUpdate', {
       players: getLobbyPlayers(lobbyCode),
     });
   });
@@ -74,9 +74,7 @@ io.on('connection', (socket) => {
     const player = playerLeave(socket.id);
 
     if (player) {
-      // Send players and room info
-      io.to(player.lobbyCode).emit('lobbyInfo', {
-        room: player.lobbyCode,
+      io.to(player.lobbyCode).emit('playerUpdate', {
         players: getLobbyPlayers(player.lobbyCode),
       });
     }
