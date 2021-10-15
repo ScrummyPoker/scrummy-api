@@ -1,4 +1,4 @@
-# RESTful API for Daissen Org
+# RESTful API for Scrummy Poker
 
 ## Quick Start
 
@@ -23,27 +23,20 @@ npm run dev
 The environment variables can be found and modified in the `.env` file. They come with these default values:
 
 ```bash
-# Port number
-PORT=3000
+PORT=3030
+SOCKET_PORT=3333
 
-# URL of the Mongo DB
-MONGODB_URL=mongodb://127.0.0.1:27017/node-boilerplate
+MONGODB_URL=mongodb+srv://userdb:scrumpokerpass@cluster0.ha53h.mongodb.net/myFirstDatabase?retryWrites=true&w=majority
 
-# JWT
-# JWT secret key
+JWT_ACCESS_EXPIRATION_MINUTES=4320
+JWT_REFRESH_EXPIRATION_DAYS=4320
 JWT_SECRET=thisisasamplesecret
-# Number of minutes after which an access token expires
-JWT_ACCESS_EXPIRATION_MINUTES=30
-# Number of days after which a refresh token expires
-JWT_REFRESH_EXPIRATION_DAYS=30
 
-# SMTP configuration options for the email service
-# For testing, you can use a fake SMTP service like Ethereal: https://ethereal.email/create
-SMTP_HOST=email-server
 SMTP_PORT=587
-SMTP_USERNAME=email-server-username
-SMTP_PASSWORD=email-server-password
-EMAIL_FROM=support@yourapp.com
+EMAIL_FROM=pearl.sipes63@ethereal.email
+SMTP_HOST=smtp.ethereal.email
+SMTP_PASSWORD=Y6TmKJP4YnzVChrVBV
+SMTP_USERNAME=pearl.sipes63@ethereal.email
 ```
 
 ## Source Boilerplate
