@@ -4,11 +4,21 @@ const app = require('./app');
 const config = require('./config/config');
 const logger = require('./config/logger');
 const formatMessage = require('./utils/messages');
-const { playerJoin, getCurrentPlayer, playerLeave, getLobbyPlayers } = require('./utils/players');
+const { playerJoin, getCurrentPlayer, playerLeave, getLobbyPlayers, getCurrentPlayerBySocket } = require('./utils/players');
 
 mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   logger.info('Connected to MongoDB');
 });
+
+const JOIN_LOBBY = 'joinLobby';
+const NEW_MESSAGE_EVENT = 'chatMessage';
+const GO_NEXT_PAGE_EVENT = 'goToNextPage';
+const LOBBY_INFO = 'lobbyInfo';
+const ADMIN_ACTION = 'adminAction';
+const CARD_MESSAGE_EVENT = 'cardMessage';
+const LOBBY_MESSAGE_EVENT = 'lobbyMessage';
+const LOBBY_PLAYER_UPDATE = 'playerUpdate';
+const LOBBY_CHANGE_SEQUENCE = 'changeSequence';
 
 const io = socketio(app);
 
@@ -58,14 +68,22 @@ io.on('connection', (socket) => {
   });
 
   // Listen for admin messages
-  socket.on('adminAction', (cardData) => {
+  socket.on(ADMIN_ACTION, (cardData) => {
     const player = getCurrentPlayer(cardData.player.id);
+    console.log(cardData);
 
     // Send players and lobby info
-    io.to(player.lobbyCode).emit('adminAction', {
+    io.to(player.lobbyCode).emit(ADMIN_ACTION, {
       lobbyCode: player.lobbyCode,
       action: cardData.action,
     });
+  });
+
+  // Listen for lobby sequence
+  socket.on(LOBBY_CHANGE_SEQUENCE, ({ sequence }) => {
+    console.log(sequence);
+    const player = getCurrentPlayerBySocket(socket.id);
+    io.to(player.lobbyCode).emit(LOBBY_CHANGE_SEQUENCE, { sequence });
   });
 
   // Runs when client disconnects

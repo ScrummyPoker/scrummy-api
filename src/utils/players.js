@@ -5,6 +5,11 @@ function getCurrentPlayer(id) {
   return players.find((player) => player.id === id);
 }
 
+//Get player by socket
+function getCurrentPlayerBySocket(socketId) {
+  return players.find((player) => player.socketId === socketId);
+}
+
 // Join player to chat
 function playerJoin(socketId, id, playerName, lobbyCode) {
   let player = getCurrentPlayer(id);
@@ -33,6 +38,7 @@ function getLobbyPlayers(lobbyCode) {
 module.exports = {
   playerJoin,
   getCurrentPlayer,
+  getCurrentPlayerBySocket,
   playerLeave,
   getLobbyPlayers,
 };
