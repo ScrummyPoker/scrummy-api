@@ -40,6 +40,7 @@ app.use(compression());
 // enable cors
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Access-Control-Allow-Origin');
   app.use(cors());
   next();
 });
